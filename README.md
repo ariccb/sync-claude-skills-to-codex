@@ -11,23 +11,24 @@ Sync Claude Code skills to Codex CLI via symlinks. Share your skill library betw
 
 ## Installation
 
-### As a Claude Code plugin
+### From GitHub (recommended)
 
 ```bash
-# Install from marketplace (when available)
-/plugin install sync-claude-skills-to-codex@ariccb
+# Step 1: Add the marketplace
+/plugin marketplace add ariccb/sync-claude-skills-to-codex
 
-# Or install from GitHub directly
-/plugin install https://github.com/ariccb/sync-claude-skills-to-codex
+# Step 2: Install the plugin
+/plugin install sync-claude-skills-to-codex@ariccb-ai-tools
 ```
 
 ### Manual installation
 
-Copy the skill to your personal skills directory:
+Clone and copy the skill to your personal skills directory:
 
 ```bash
+git clone https://github.com/ariccb/sync-claude-skills-to-codex.git
 mkdir -p ~/.claude/skills
-cp -r skills/sync-claude-skills-to-codex ~/.claude/skills/
+cp -r sync-claude-skills-to-codex/sync-claude-skills-to-codex/skills/sync-claude-skills-to-codex ~/.claude/skills/
 ```
 
 ## Usage

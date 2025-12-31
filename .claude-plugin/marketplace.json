@@ -1,0 +1,11 @@
+{
+  "name": "ariccb-ai-tools",
+  "description": "AI coding assistant tools and utilities by ariccb",
+  "plugins": [
+    {
+      "name": "sync-claude-skills-to-codex",
+      "path": "sync-claude-skills-to-codex",
+      "description": "Sync Claude Code skills to Codex CLI via symlinks"
+    }
+  ]
+}
