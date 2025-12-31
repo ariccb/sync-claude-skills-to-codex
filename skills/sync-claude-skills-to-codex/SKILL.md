@@ -24,81 +24,89 @@ Options:
 
 ## Workflow
 
-### Step 1: Ensure directories exist
+Run all steps as a single bash script to avoid shell compatibility issues:
 
 ```bash
-mkdir -p "$HOME/.codex/skills" "$HOME/bin"
-```
-
-### Step 2: Sync plugin skills
-
-Find all SKILL.md files in Claude plugin cache and create symlinks:
-
-```bash
+bash -c '
 CODEX_SKILLS="$HOME/.codex/skills"
 CLAUDE_PLUGINS="$HOME/.claude/plugins/cache"
-
-find "$CLAUDE_PLUGINS" -name "SKILL.md" -path "*/skills/*" 2>/dev/null | while read skill_file; do
-    skill_dir=$(dirname "$skill_file")
-    skill_name=$(basename "$skill_dir")
-
-    # Skip hidden directories
-    [[ "$skill_name" == .* ]] && continue
-
-    # Skip if manual (non-symlink) skill exists
-    if [ -e "$CODEX_SKILLS/$skill_name" ] && [ ! -L "$CODEX_SKILLS/$skill_name" ]; then
-        echo "SKIP: $skill_name (manual skill exists)"
-        continue
-    fi
-
-    ln -sfn "$skill_dir" "$CODEX_SKILLS/$skill_name"
-    echo "SYNC: $skill_name -> $skill_dir"
-done
-```
-
-### Step 3: Sync personal skills
-
-```bash
 CLAUDE_PERSONAL="$HOME/.claude/skills"
 
-if [ -d "$CLAUDE_PERSONAL" ]; then
-    for skill_dir in "$CLAUDE_PERSONAL"/*/; do
-        [ -f "$skill_dir/SKILL.md" ] || continue
-        skill_name=$(basename "$skill_dir")
-        [[ "$skill_name" == .* ]] && continue
+# Step 1: Ensure directories exist
+mkdir -p "$CODEX_SKILLS" "$HOME/bin"
 
+# Step 2: Sync plugin skills
+echo "=== Syncing Claude plugin skills ==="
+if [ -d "$CLAUDE_PLUGINS" ]; then
+    find "$CLAUDE_PLUGINS" -name "SKILL.md" -path "*/skills/*" 2>/dev/null | while read skill_file; do
+        skill_dir=$(dirname "$skill_file")
+        skill_name=$(basename "$skill_dir")
+
+        # Skip hidden directories (POSIX compatible)
+        case "$skill_name" in .*) continue ;; esac
+
+        # Skip if manual (non-symlink) skill exists
         if [ -e "$CODEX_SKILLS/$skill_name" ] && [ ! -L "$CODEX_SKILLS/$skill_name" ]; then
             echo "SKIP: $skill_name (manual skill exists)"
             continue
         fi
 
         ln -sfn "$skill_dir" "$CODEX_SKILLS/$skill_name"
-        echo "SYNC: $skill_name -> $skill_dir"
+        echo "SYNC: $skill_name"
     done
 fi
+
+# Step 3: Sync personal skills
+echo ""
+echo "=== Syncing Claude personal skills ==="
+if [ -d "$CLAUDE_PERSONAL" ]; then
+    for skill_dir in "$CLAUDE_PERSONAL"/*/; do
+        [ -f "${skill_dir}SKILL.md" ] || continue
+        skill_name=$(basename "$skill_dir")
+
+        # Skip hidden directories (POSIX compatible)
+        case "$skill_name" in .*) continue ;; esac
+
+        if [ -e "$CODEX_SKILLS/$skill_name" ] && [ ! -L "$CODEX_SKILLS/$skill_name" ]; then
+            echo "SKIP: $skill_name (manual skill exists)"
+            continue
+        fi
+
+        ln -sfn "${skill_dir%/}" "$CODEX_SKILLS/$skill_name"
+        echo "SYNC: $skill_name"
+    done
+fi
+
+# Step 4: Report results
+echo ""
+echo "=== Sync Complete ==="
+echo "Skills in: $CODEX_SKILLS/"
+ls -la "$CODEX_SKILLS/" | grep -E "^l|^d" | grep -v "^\." | head -20
+'
 ```
 
-### Step 4: Install list-skills enumerator
+### Step 5: Install list-skills enumerator (optional)
 
-Create `~/bin/list-skills` if it doesn't exist. See [list-skills.py](list-skills.py) for the full script.
+If list-skills is not already installed, copy it from the skill directory:
 
 ```bash
-if [ ! -f "$HOME/bin/list-skills" ]; then
-    # Copy list-skills.py to ~/bin/list-skills and make executable
-    cp "$(dirname "$0")/list-skills.py" "$HOME/bin/list-skills"
+# Find the skill directory (works whether installed as plugin or personal skill)
+SKILL_DIR=$(find ~/.claude -name "list-skills.py" -path "*sync-claude-skills-to-codex*" 2>/dev/null | head -1 | xargs dirname)
+if [ -n "$SKILL_DIR" ] && [ ! -f "$HOME/bin/list-skills" ]; then
+    cp "$SKILL_DIR/list-skills.py" "$HOME/bin/list-skills"
     chmod +x "$HOME/bin/list-skills"
     echo "INSTALLED: ~/bin/list-skills"
 fi
 ```
 
-### Step 5: Report results
+### Verify installation
 
 ```bash
-echo ""
-echo "=== Sync Complete ==="
-echo "Skills available in: ~/.codex/skills/"
-echo "Run 'list-skills' to see all skills"
-echo "Run 'list-skills --json' for machine-readable output"
+# List all synced skills
+ls -la ~/.codex/skills/
+
+# If list-skills is installed
+list-skills
 ```
 
 ## Output
