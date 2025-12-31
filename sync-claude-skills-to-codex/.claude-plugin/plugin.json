@@ -2,7 +2,9 @@
   "name": "sync-claude-skills-to-codex",
   "version": "1.0.0",
   "description": "Sync Claude Code skills to Codex CLI via symlinks. Share your skill library between both AI coding assistants.",
-  "author": "ariccb",
+  "author": {
+    "name": "ariccb"
+  },
   "license": "MIT",
   "repository": "https://github.com/ariccb/sync-claude-skills-to-codex",
   "keywords": ["codex", "skills", "sync", "symlinks"]
